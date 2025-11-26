@@ -47,7 +47,7 @@ np.set_printoptions(precision=3, suppress=True)
 def play(args):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
-    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 5)
+    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
     env_cfg.terrain.tot_rows = 600
     env_cfg.terrain.tot_cols = 600
     # env_cfg.terrain.transform_y = - env_cfg.terrain.tot_rows * env_cfg.terrain.horizontal_scale / 2

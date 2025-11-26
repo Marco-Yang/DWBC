@@ -214,15 +214,30 @@ class WidowGo1(LeggedRobot):
         self.env_origins = torch.zeros(self.num_envs, 3, device=self.device, requires_grad=False)
         # create a grid of robots
 
-        half_col_size = self.cfg.terrain.tot_cols * self.cfg.terrain.horizontal_scale / 2
-        half_row_size = self.cfg.terrain.tot_rows * self.cfg.terrain.horizontal_scale / 2
-        x_bounds = [- 2.5 * half_col_size / 5, - 2 * half_col_size / 5]
-        y_bounds = [- half_row_size + 10, half_row_size - 10]
-        print('origin x_bounds', x_bounds)
-        print('origin y_bounds', y_bounds)
-        self.env_origins[:, 0] = torch_rand_float(x_bounds[0], x_bounds[1], (self.num_envs, 1), device=self.device)[:, 0]
-        self.env_origins[:, 1] = torch_rand_float(y_bounds[0], y_bounds[1], (self.num_envs, 1), device=self.device)[:, 0]
-        self.env_origins[:, 2] = 0.
+        # For plane terrain, use simple grid around origin
+        if self.cfg.terrain.mesh_type == 'plane':
+            # Create a grid centered at origin for plane terrain
+            num_cols = int(np.sqrt(self.num_envs))
+            num_rows = int(np.ceil(self.num_envs / num_cols))
+            spacing = 2.0  # 2 meters between robots
+            for i in range(self.num_envs):
+                row = i // num_cols
+                col = i % num_cols
+                self.env_origins[i, 0] = (col - num_cols / 2) * spacing
+                self.env_origins[i, 1] = (row - num_rows / 2) * spacing
+                self.env_origins[i, 2] = 0.
+            print(f'Plane terrain: placing {self.num_envs} robots in a {num_rows}x{num_cols} grid around origin')
+        else:
+            # Original logic for trimesh terrain
+            half_col_size = self.cfg.terrain.tot_cols * self.cfg.terrain.horizontal_scale / 2
+            half_row_size = self.cfg.terrain.tot_rows * self.cfg.terrain.horizontal_scale / 2
+            x_bounds = [- 2.5 * half_col_size / 5, - 2 * half_col_size / 5]
+            y_bounds = [- half_row_size + 10, half_row_size - 10]
+            print('origin x_bounds', x_bounds)
+            print('origin y_bounds', y_bounds)
+            self.env_origins[:, 0] = torch_rand_float(x_bounds[0], x_bounds[1], (self.num_envs, 1), device=self.device)[:, 0]
+            self.env_origins[:, 1] = torch_rand_float(y_bounds[0], y_bounds[1], (self.num_envs, 1), device=self.device)[:, 0]
+            self.env_origins[:, 2] = 0.
 
         self.box_env_origins_x = self.cfg.box.box_env_origins_x
         self.box_env_origins_delta_y = (torch_rand_sign((self.num_envs, 1), self.device) * \
@@ -234,8 +249,28 @@ class WidowGo1(LeggedRobot):
         """
         self.up_axis_idx = 2 # 2 for z, 1 for y -> adapt gravity accordingly
         self.sim = self.gym.create_sim(self.sim_device_id, self.graphics_device_id, self.physics_engine, self.sim_params)
-        self.terrain = Terrain_Perlin(self.cfg.terrain)
-        self._create_trimesh()
+        
+        # Create terrain based on mesh_type
+        if self.cfg.terrain.mesh_type == 'plane':
+            # Create a simple ground plane for visualization
+            plane_params = gymapi.PlaneParams()
+            plane_params.normal = gymapi.Vec3(0.0, 0.0, 1.0)
+            plane_params.static_friction = self.cfg.terrain.static_friction
+            plane_params.dynamic_friction = self.cfg.terrain.dynamic_friction
+            plane_params.restitution = self.cfg.terrain.restitution
+            self.gym.add_ground(self.sim, plane_params)
+            # Create dummy terrain object for compatibility
+            self.terrain = type('obj', (object,), {
+                'tot_rows': self.cfg.terrain.tot_rows,
+                'tot_cols': self.cfg.terrain.tot_cols,
+                'heightsamples': np.zeros((self.cfg.terrain.tot_rows, self.cfg.terrain.tot_cols))
+            })()
+            self.height_samples = torch.zeros(self.cfg.terrain.tot_rows, self.cfg.terrain.tot_cols, device=self.device)
+        else:
+            # Create trimesh terrain
+            self.terrain = Terrain_Perlin(self.cfg.terrain)
+            self._create_trimesh()
+        
         self._create_envs()
     
     def _create_trimesh(self):
@@ -1139,21 +1174,37 @@ class WidowGo1(LeggedRobot):
     def _draw_ee_goal(self):
         sphere_geom = gymutil.WireframeSphereGeometry(0.005, 8, 8, None, color=(1, 0, 0))
         sphere_geom_yellow = gymutil.WireframeSphereGeometry(0.01, 16, 16, None, color=(1, 1, 0))
+        sphere_geom_cyan = gymutil.WireframeSphereGeometry(0.01, 16, 16, None, color=(0, 1, 1))
 
         t = torch.linspace(0, 1, 10, device=self.device)[None, None, None, :]
         ee_target_all_sphere = torch.lerp(self.ee_start_sphere[..., None], self.ee_goal_sphere[..., None], t).squeeze()
+        # ee_target_all_sphere shape: [num_envs, 3, 10] after squeeze
         ee_target_all_cart_world = torch.zeros_like(ee_target_all_sphere)
         for i in range(10):
             ee_target_cart = sphere2cart(ee_target_all_sphere[..., i])
             ee_target_all_cart_world[..., i] = quat_apply(self.base_yaw_quat, ee_target_cart)
-        ee_target_all_cart_world += torch.cat([self.root_states[:, :2], self.z_invariant_offset], dim=1)[:, :, None]
-        # curr_ee_goal_cart_world = quat_apply(self.base_yaw_quat, self.curr_ee_goal_cart) + self.root_states[:, :3]
+        # Add base position offset with proper broadcasting: [num_envs, 3] -> [num_envs, 3, 1]
+        base_offset = torch.cat([self.root_states[:, :2], self.z_invariant_offset], dim=1)  # [num_envs, 3]
+        ee_target_all_cart_world = ee_target_all_cart_world + base_offset.unsqueeze(-1)  # Broadcasting [num_envs, 3, 10] + [num_envs, 3, 1]
+        
+        # Also draw start (cyan) and goal (yellow) positions
+        ee_start_cart_world = quat_apply(self.base_yaw_quat, sphere2cart(self.ee_start_sphere)) + base_offset
+        ee_goal_cart_world = quat_apply(self.base_yaw_quat, sphere2cart(self.ee_goal_sphere)) + base_offset
+        curr_ee_goal_cart_world = quat_apply(self.base_yaw_quat, self.curr_ee_goal_cart) + base_offset
+        
         for i in range(self.num_envs):
+            # Draw trajectory points (red, small)
             for j in range(10):
                 pose = gymapi.Transform(gymapi.Vec3(ee_target_all_cart_world[i, 0, j], ee_target_all_cart_world[i, 1, j], ee_target_all_cart_world[i, 2, j]), r=None)
                 gymutil.draw_lines(sphere_geom, self.gym, self.viewer, self.envs[i], pose)
-            # pose_curr = gymapi.Transform(gymapi.Vec3(curr_ee_goal_cart_world[i, 0], curr_ee_goal_cart_world[i, 1], curr_ee_goal_cart_world[i, 2]), r=None)
-            # gymutil.draw_lines(sphere_geom_yellow, self.gym, self.viewer, self.envs[i], pose_curr)
+            
+            # Draw start position (cyan, larger)
+            pose_start = gymapi.Transform(gymapi.Vec3(ee_start_cart_world[i, 0], ee_start_cart_world[i, 1], ee_start_cart_world[i, 2]), r=None)
+            gymutil.draw_lines(sphere_geom_cyan, self.gym, self.viewer, self.envs[i], pose_start)
+            
+            # Draw goal position (yellow, larger)
+            pose_goal = gymapi.Transform(gymapi.Vec3(ee_goal_cart_world[i, 0], ee_goal_cart_world[i, 1], ee_goal_cart_world[i, 2]), r=None)
+            gymutil.draw_lines(sphere_geom_yellow, self.gym, self.viewer, self.envs[i], pose_goal)
 
     def step(self, actions):
         """ Apply actions, simulate, call self.post_physics_step()

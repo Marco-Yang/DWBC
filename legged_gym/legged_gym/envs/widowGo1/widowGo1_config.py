@@ -287,7 +287,7 @@ class WidowGo1RoughCfg( LeggedRobotCfg ):
         z_threshold = 0.325
 
     class terrain:
-        mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
+        mesh_type = 'plane' # "heightfield" # none, plane, heightfield or trimesh
         add_slopes = True
         slope_incline = 0.2
         horizontal_scale = 0.025 # [m]

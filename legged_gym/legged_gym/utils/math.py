@@ -120,39 +120,60 @@ def torch_wrap_to_pi_minuspi(angles):
 # @ torch.jit.script
 def cart2sphere(cart_coords):
     """
-    Convert Cartesian coordinates to spherical coordinates
+    Convert Cartesian coordinates to spherical coordinates for robot arm workspace
     cart_coords: (..., 3) tensor with [x, y, z]
-    returns: (..., 3) tensor with [r, theta, phi]
+    returns: (..., 3) tensor with [r, pitch, yaw]
         r: radial distance
-        theta: polar angle (angle from z-axis), range [0, pi]
-        phi: azimuthal angle (angle in xy-plane from x-axis), range [-pi, pi]
+        pitch: elevation angle (positive = up, negative = down), range [-pi/2, pi/2]
+        yaw: azimuthal angle (positive = left, negative = right), range [-pi, pi]
+    
+    Convention matches robot arm workspace:
+    - x: forward, y: left, z: up
+    - pitch = arcsin(z/r)
+    - yaw = arctan2(y, x)
     """
     x = cart_coords[..., 0]
     y = cart_coords[..., 1]
     z = cart_coords[..., 2]
     
+    # Total distance from origin
     r = torch.sqrt(x**2 + y**2 + z**2)
-    theta = torch.acos(torch.clamp(z / (r + 1e-8), -1.0, 1.0))  # polar angle
-    phi = torch.atan2(y, x)  # azimuthal angle
     
-    return torch.stack([r, theta, phi], dim=-1)
+    # Pitch: elevation angle (arcsin gives range [-pi/2, pi/2])
+    pitch = torch.asin(torch.clamp(z / (r + 1e-8), -1.0, 1.0))
+    
+    # Yaw: horizontal angle in xy-plane
+    yaw = torch.atan2(y, x)
+    
+    return torch.stack([r, pitch, yaw], dim=-1)
 
 # @ torch.jit.script
 def sphere2cart(sphere_coords):
     """
-    Convert spherical coordinates to Cartesian coordinates
-    sphere_coords: (..., 3) tensor with [r, theta, phi]
-        r: radial distance
-        theta: polar angle (angle from z-axis)
-        phi: azimuthal angle (angle in xy-plane from x-axis)
+    Convert spherical coordinates to Cartesian coordinates for robot arm workspace
+    sphere_coords: (..., 3) tensor with [r, pitch, yaw]
+        r: radial distance from shoulder
+        pitch: elevation angle (positive = up, negative = down, 0 = horizontal forward)
+        yaw: azimuthal angle (positive = left, negative = right)
     returns: (..., 3) tensor with [x, y, z]
+    
+    Convention for robot arm:
+    - x: forward (body-relative)
+    - y: left (body-relative)
+    - z: up (body-relative)
+    - pitch = 0 means horizontal forward
+    - pitch > 0 means pointing up
+    - pitch < 0 means pointing down
     """
     r = sphere_coords[..., 0]
-    theta = sphere_coords[..., 1]
-    phi = sphere_coords[..., 2]
+    pitch = sphere_coords[..., 1]
+    yaw = sphere_coords[..., 2]
     
-    x = r * torch.sin(theta) * torch.cos(phi)
-    y = r * torch.sin(theta) * torch.sin(phi)
-    z = r * torch.cos(theta)
+    # Forward distance in horizontal plane
+    x = r * torch.cos(pitch) * torch.cos(yaw)
+    # Lateral distance
+    y = r * torch.cos(pitch) * torch.sin(yaw)
+    # Vertical distance (positive pitch = positive z)
+    z = r * torch.sin(pitch)
     
     return torch.stack([x, y, z], dim=-1)
