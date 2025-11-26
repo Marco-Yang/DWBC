@@ -61,3 +61,8 @@ __pycache__
 build
 wandb/
 plots/
+
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
