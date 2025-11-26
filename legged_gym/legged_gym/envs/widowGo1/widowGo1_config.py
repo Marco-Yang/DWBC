@@ -32,7 +32,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 import numpy as np
 import torch
 
-RESUME = True
+RESUME = False  # Set to True when resuming from a checkpoint
 
 class WidowGo1RoughCfg( LeggedRobotCfg ):
     # class target_ee:

@@ -34,7 +34,9 @@ import os
 
 from isaacgym.torch_utils import *
 from isaacgym import gymtorch, gymapi, gymutil
-from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_float
+from legged_gym.utils.math import (quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_float, 
+                                     torch_rand_sign, euler_from_quat, quat_from_euler_xyz,
+                                     torch_wrap_to_pi_minuspi, cart2sphere, sphere2cart)
 
 import torch
 # from torch.tensor import Tensor
