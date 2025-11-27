@@ -1,0 +1,55 @@
+_wandb:
+    value:
+        cli_version: 0.23.0
+        e:
+            d1wvyjc38c2lo8qagtrkngzfl0hahwxh:
+                args:
+                    - --task=b1z1
+                    - --exptid=9
+                    - --run_name=b1z1_fd_fixied
+                    - --headless
+                codePath: legged_gym/legged_gym/scripts/train.py
+                codePathLocal: legged_gym/legged_gym/scripts/train.py
+                cpu_count: 24
+                cpu_count_logical: 32
+                cudaVersion: "13.0"
+                disk:
+                    /:
+                        total: "916243312640"
+                        used: "430953865216"
+                email: 3155853275@qq.com
+                executable: /home/adam/anaconda3/envs/DWBC/bin/python
+                git:
+                    commit: 85d901647360e405f58e37fe9b41d320ca89a88f
+                    remote: https://github.com/Marco-Yang/DWBC.git
+                gpu: NVIDIA GeForce RTX 4090 Laptop GPU
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 9728
+                      memoryTotal: "17171480576"
+                      name: NVIDIA GeForce RTX 4090 Laptop GPU
+                      uuid: GPU-af0879a4-d638-4d3a-f44e-c4601ed506c2
+                host: adam-Alienware-m18-R2
+                memory:
+                    total: "67091251200"
+                os: Linux-6.8.0-87-generic-x86_64-with-glibc2.17
+                program: legged_gym/legged_gym/scripts/train.py
+                python: CPython 3.8.20
+                root: /home/adam/Deep-Whole-Body-Control
+                startedAt: "2025-11-27T14:26:35.916226Z"
+                writerId: d1wvyjc38c2lo8qagtrkngzfl0hahwxh
+        m: []
+        python_version: 3.8.20
+        t:
+            "1":
+                - 1
+            "2":
+                - 1
+            "3":
+                - 3
+                - 13
+            "4": 3.8.20
+            "5": 0.23.0
+            "12": 0.23.0
+            "13": linux-x86_64

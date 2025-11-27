@@ -1,0 +1,46 @@
+{
+  "os": "Linux-6.8.0-87-generic-x86_64-with-glibc2.17",
+  "python": "CPython 3.8.20",
+  "startedAt": "2025-11-27T14:26:35.916226Z",
+  "args": [
+    "--task=b1z1",
+    "--exptid=9",
+    "--run_name=b1z1_fd_fixied",
+    "--headless"
+  ],
+  "program": "legged_gym/legged_gym/scripts/train.py",
+  "codePath": "legged_gym/legged_gym/scripts/train.py",
+  "codePathLocal": "legged_gym/legged_gym/scripts/train.py",
+  "git": {
+    "remote": "https://github.com/Marco-Yang/DWBC.git",
+    "commit": "85d901647360e405f58e37fe9b41d320ca89a88f"
+  },
+  "email": "3155853275@qq.com",
+  "root": "/home/adam/Deep-Whole-Body-Control",
+  "host": "adam-Alienware-m18-R2",
+  "executable": "/home/adam/anaconda3/envs/DWBC/bin/python",
+  "cpu_count": 24,
+  "cpu_count_logical": 32,
+  "gpu": "NVIDIA GeForce RTX 4090 Laptop GPU",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "916243312640",
+      "used": "430953865216"
+    }
+  },
+  "memory": {
+    "total": "67091251200"
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA GeForce RTX 4090 Laptop GPU",
+      "memoryTotal": "17171480576",
+      "cudaCores": 9728,
+      "architecture": "Ada",
+      "uuid": "GPU-af0879a4-d638-4d3a-f44e-c4601ed506c2"
+    }
+  ],
+  "cudaVersion": "13.0",
+  "writerId": "d1wvyjc38c2lo8qagtrkngzfl0hahwxh"
+}

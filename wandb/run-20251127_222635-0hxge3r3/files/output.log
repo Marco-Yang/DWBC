@@ -1,0 +1,14 @@
+[34m[1mwandb[0m: [33mWARNING[0m Saving files without folders. If you want to preserve subdirectories pass base_path to wandb.save, i.e. wandb.save("/mnt/folder/file.h5", base_path="/mnt")
+Setting seed: 1
+Traceback (most recent call last):
+  File "legged_gym/legged_gym/scripts/train.py", line 57, in <module>
+    train(args)
+  File "legged_gym/legged_gym/scripts/train.py", line 51, in train
+    env, env_cfg = task_registry.make_env(name=args.task, args=args)
+  File "/home/adam/Deep-Whole-Body-Control/legged_gym/legged_gym/utils/task_registry.py", line 102, in make_env
+    env = task_class(   cfg=env_cfg,
+  File "/home/adam/Deep-Whole-Body-Control/legged_gym/legged_gym/envs/base/legged_robot.py", line 71, in __init__
+    super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless)
+  File "/home/adam/Deep-Whole-Body-Control/legged_gym/legged_gym/envs/base/base_task.py", line 71, in __init__
+    self.obs_buf = torch.zeros(self.num_envs, self.num_obs, device=self.device, dtype=torch.float)
+KeyboardInterrupt

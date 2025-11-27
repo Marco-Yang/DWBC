@@ -41,6 +41,8 @@ from .a1.a1_config import A1RoughCfg, A1RoughCfgPPO
 from .go1.go1_config import Go1RoughCfg, Go1RoughCfgPPO
 from .widowGo1.widowGo1 import WidowGo1
 from .widowGo1.widowGo1_config import WidowGo1RoughCfg, WidowGo1RoughCfgPPO
+from .b1z1.b1z1 import B1Z1
+from .b1z1.b1z1_config import B1Z1RoughCfg, B1Z1RoughCfgPPO
 
 
 import os
@@ -53,4 +55,5 @@ task_registry.register( "anymal_b", Anymal, AnymalBRoughCfg(), AnymalBRoughCfgPP
 task_registry.register( "a1", LeggedRobot, A1RoughCfg(), A1RoughCfgPPO(), 'a1')
 task_registry.register( "go1", LeggedRobot, Go1RoughCfg(), Go1RoughCfgPPO(), 'go1')
 task_registry.register( "widowGo1", WidowGo1, WidowGo1RoughCfg(), WidowGo1RoughCfgPPO(), 'widowGo1')
+task_registry.register( "b1z1", B1Z1, B1Z1RoughCfg(), B1Z1RoughCfgPPO(), 'b1z1')
 task_registry.register( "cassie", Cassie, CassieRoughCfg(), CassieRoughCfgPPO(), 'cassie')
